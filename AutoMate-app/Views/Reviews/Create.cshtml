@@ -1,0 +1,78 @@
+﻿@model AutoMate_app.Models.Review
+
+@{
+    ViewData["Title"] = "Create Review";
+}
+
+<h1>Create Review</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (ViewData["ServiceRequestInfo"] != null)
+{
+    <div class="alert alert-info">
+        <strong>Service Request:</strong> @ViewData["ServiceRequestInfo"]
+    </div>
+}
+
+<h4>Review</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @if (ViewData["ServiceRequestId"] is int serviceRequestId)
+            {
+                <input type="hidden" asp-for="ServiceRequestId" value="@serviceRequestId" />
+                <div class="form-group mb-3">
+                    <label class="form-label">Service Request ID</label>
+                    <input type="text" class="form-control" value="@serviceRequestId" readonly />
+                </div>
+            }
+            else
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="ServiceRequestId" class="control-label"></label>
+                    <select asp-for="ServiceRequestId" class="form-control" asp-items="ViewBag.ServiceRequestId">
+                        <option value="">-- Select Service Request --</option>
+                    </select>
+                    <span asp-validation-for="ServiceRequestId" class="text-danger"></span>
+                </div>
+            }
+
+            <div class="form-group mb-3">
+                <label asp-for="Rating" class="control-label">Rating (1-5)</label>
+                <select asp-for="Rating" class="form-control">
+                    <option value="">-- Select Rating --</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+                <span asp-validation-for="Rating" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Comment" class="control-label"></label>
+                <textarea asp-for="Comment" class="form-control" rows="5" placeholder="Write your review here..."></textarea>
+                <span asp-validation-for="Comment" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Submit Review" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

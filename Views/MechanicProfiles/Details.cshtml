@@ -1,0 +1,149 @@
+@model AutoMate_app.Models.MechanicProfile
+
+@{
+    ViewData["Title"] = "Mechanic Profile";
+    var completion = GetCompletionPercent(Model);
+}
+//tt
+<style>
+    body { background: #080808; color: #f9fafb; }
+    .profile-hero {
+        background: radial-gradient(circle at top,#1c1c1c,#060606);
+        border-radius: 24px;
+        padding: 2.5rem;
+        border: 1px solid #242424;
+        color: #f9fafb;
+    }
+    .stat-card {
+        background: #131313;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #1f1f1f;
+        color: #f9fafb;
+    }
+    .profile-label {
+        color: #e5e7eb;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+    .progress {
+        background: #1d1d1d;
+        height: 12px;
+        border-radius: 999px;
+    }
+    .progress-bar {
+        background: linear-gradient(90deg,#ff6a00,#ee0979);
+        border-radius: 999px;
+    }
+</style>
+
+<div class="profile-hero mb-4 shadow-lg">
+    <div class="d-flex flex-wrap justify-content-between align-items-start">
+        <div class="mb-4 mb-md-0">
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="display-6 mb-0">@Model.GarageName</h1>
+                <span class="badge @(Model.IsVerifiedByAdmin ? "bg-success" : "bg-danger")">
+                    @(Model.IsVerifiedByAdmin ? "Verified Mechanic" : "Pending Verification")
+                </span>
+            </div>
+            <div style="color:#e5e7eb;" class="mt-2">@Model.User?.Email</div>
+            <div class="mt-4">
+                <div class="small mb-1" style="color:#e5e7eb;">Profile Completion</div>
+                <div class="progress mb-2">
+                    <div class="progress-bar" style="width:@completion%" role="progressbar"></div>
+                </div>
+                <span class="badge @(completion == 100 ? "bg-success" : completion >= 60 ? "bg-warning text-dark" : "bg-danger")">
+                    @(completion == 100 ? "Complete" : completion >= 60 ? "Almost there" : "Needs updates")
+                </span>
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="mb-2">
+                @{
+                    var rounded = Math.Round(Model.AverageRating);
+                }
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (i <= rounded)
+                    {
+                        <span class="text-warning display-6">★</span>
+                    }
+                    else
+                    {
+                        <span style="color:#4b5563;" class="display-6">☆</span>
+                    }
+                }
+            </div>
+            <div class="fs-1 fw-bold">@Model.AverageRating.ToString("0.0")</div>
+            <div style="color:#e5e7eb;">Based on @Model.TotalReviews reviews</div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <span class="profile-label">Specialization</span>
+        <div class="fs-4">@DisplayOrPlaceholder(Model.Specialization)</div>
+    </div>
+</div>
+
+<div class="row gy-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h4>Contact</h4>
+            <hr class="border-dark" />
+            <div class="mb-3">
+                <div class="profile-label">Email</div>
+                <div>@(Model.User != null ? Model.User.Email : Html.Raw("<span style='color:#9ca3af;'>N/A</span>"))</div>
+            </div>
+            <div class="mb-3">
+                <div class="profile-label">User ID</div>
+                <div><code>@Model.UserId</code></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h4>Admin Controls</h4>
+            <hr class="border-dark" />
+            @if (User.IsInRole("Admin"))
+            {
+                <form asp-action="Verify" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" name="verify" value="true" class="btn btn-success w-50">Verify</button>
+                    <button type="submit" name="verify" value="false" class="btn btn-outline-danger w-50">Unverify</button>
+                </form>
+            }
+            else
+            {
+                <p style="color:#9ca3af;">Only admins can change verification status.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 d-flex justify-content-end gap-2">
+    @if (User.IsInRole("Admin") || Model.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit Profile</a>
+    }
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
+
+@functions{
+    private int GetCompletionPercent(AutoMate_app.Models.MechanicProfile profile)
+    {
+        var fields = new[]
+        {
+            profile.GarageName,
+            profile.Specialization,
+            profile.User?.Email
+        };
+        var filled = fields.Count(value => !string.IsNullOrWhiteSpace(value));
+        return (int)((double)filled / fields.Length * 100);
+    }
+
+    private object DisplayOrPlaceholder(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? Html.Raw("<span style='color:#9ca3af;'>Not provided</span>")
+            : value;
+}

@@ -1,0 +1,77 @@
+﻿@model AutoMate_app.Models.MechanicProfile
+
+@{
+    ViewData["Title"] = "Create Mechanic Profile";
+}
+
+<style>
+    body {
+        background-color: #0c0c0c;
+        color: #f2f2f2;
+    }
+
+    .form-card {
+        background: #161616;
+        border-radius: 18px;
+        padding: 2rem;
+        border: 1px solid #222;
+        box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    }
+
+    .form-control, .form-select {
+        background: #212121;
+        border: 1px solid #333;
+        color: #fff;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #00c9a7;
+            box-shadow: none;
+        }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="form-card">
+            <h2 class="mb-2">Become A Mechanic</h2>
+            <p class="text-muted mb-4">
+                Share details about your garage so clients can find and trust you.
+            </p>
+
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <!-- GarageName (Required) -->
+                <div class="mb-3">
+                    <label asp-for="GarageName" class="form-label">Garage Name *</label>
+                    <input asp-for="GarageName" class="form-control" placeholder="Example: Prime Auto Solutions" />
+                    <span asp-validation-for="GarageName" class="text-danger"></span>
+                </div>
+
+                <!-- Specialization (Optional) -->
+                <div class="mb-3">
+                    <label asp-for="Specialization" class="form-label">Specialization</label>
+                    <input asp-for="Specialization" class="form-control" placeholder="Diagnostics, Electrical, Hybrid systems..." />
+                    <span asp-validation-for="Specialization" class="text-danger"></span>
+                    <small class="text-muted">Optional, but helps clients choose the right mechanic.</small>
+                </div>
+
+
+                <div class="alert alert-info">
+                    After submission, your profile will be reviewed by an admin for verification.
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Submit Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

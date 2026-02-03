@@ -1,0 +1,70 @@
+﻿@model AutoMate_app.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>ServiceRequest</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="ClientId" class="control-label"></label>
+                <select asp-for="ClientId" class="form-control" asp-items="ViewBag.ClientId"></select>
+                <span asp-validation-for="ClientId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MechanicId" class="control-label"></label>
+                <select asp-for="MechanicId" class="form-control" asp-items="ViewBag.MechanicId"></select>
+                <span asp-validation-for="MechanicId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ServiceTypeId" class="control-label"></label>
+                <select asp-for="ServiceTypeId" class="form-control" asp-items="ViewBag.ServiceTypeId"></select>
+                <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProblemDescription" class="control-label"></label>
+                <input asp-for="ProblemDescription" class="form-control" />
+                <span asp-validation-for="ProblemDescription" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LocationAddress" class="control-label"></label>
+                <input asp-for="LocationAddress" class="form-control" />
+                <span asp-validation-for="LocationAddress" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LocationLatitude" class="control-label"></label>
+                <input asp-for="LocationLatitude" class="form-control" />
+                <span asp-validation-for="LocationLatitude" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LocationLongitude" class="control-label"></label>
+                <input asp-for="LocationLongitude" class="form-control" />
+                <span asp-validation-for="LocationLongitude" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+           
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

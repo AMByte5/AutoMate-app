@@ -1,0 +1,90 @@
+@model AutoMate_app.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = "Create Service Request";
+}
+
+<style>
+    .card-dark {
+        background-color: #111827;
+        border-radius: 16px;
+        border: 1px solid #1f2937;
+        color: #f9fafb;
+    }
+    .card-dark .form-label {
+        color: #e5e7eb;
+    }
+    .card-dark .form-control,
+    .card-dark .form-select {
+        background-color: #020617;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+    .card-dark .form-control::placeholder {
+        color: #9ca3af;
+    }
+</style>
+
+<h1>Create</h1>
+<h4>Service Request</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card-dark p-4 shadow-lg">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                @* ServiceType – dropdown *@
+                <div class="mb-3">
+                    <label asp-for="ServiceTypeId" class="form-label"></label>
+                    <select asp-for="ServiceTypeId" class="form-select" asp-items="ViewBag.ServiceTypeId">
+                        <option value="">-- Select a service type --</option>
+                    </select>
+                    <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
+                </div>
+
+                @* Problem description – sent to Gemini *@
+                <div class="mb-3">
+                    <label asp-for="ProblemDescription" class="form-label"></label>
+                    <textarea asp-for="ProblemDescription" class="form-control" rows="4"
+                              placeholder="Describe what is wrong with your car..."></textarea>
+                    <span asp-validation-for="ProblemDescription" class="text-danger"></span>
+                </div>
+
+                @* Location fields *@
+                <div class="mb-3">
+                    <label asp-for="LocationAddress" class="form-label"></label>
+                    <input asp-for="LocationAddress" class="form-control"
+                           placeholder="Street, city, or landmark" />
+                    <span asp-validation-for="LocationAddress" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LocationLatitude" class="form-label"></label>
+                        <input asp-for="LocationLatitude" class="form-control" />
+                        <span asp-validation-for="LocationLatitude" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LocationLongitude" class="form-label"></label>
+                        <input asp-for="LocationLongitude" class="form-control" />
+                        <span asp-validation-for="LocationLongitude" class="text-danger"></span>
+                    </div>
+                </div>
+
+                @* ClientId, MechanicId, CreatedAt, Status are set server-side in the controller *@
+
+                <div class="mt-3">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

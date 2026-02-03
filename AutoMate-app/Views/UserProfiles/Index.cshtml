@@ -1,0 +1,129 @@
+﻿@model IEnumerable<AutoMate_app.Models.UserProfile>
+
+@{
+    ViewData["Title"] = "User Profiles";
+}
+
+<style>
+    body {
+        background-color: #111;
+        color: #f5f5f5;
+    }
+
+    .card-dark {
+        background-color: #1c1c1c;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+    }
+
+    .table-dark th {
+        background-color: #222 !important;
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #2e2e2e;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, #00b09b, #96c93d);
+    }
+
+    .badge-status {
+        font-size: 0.75rem;
+        letter-spacing: .05em;
+    }
+</style>
+
+<div class="card card-dark p-4 shadow-lg">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">User Profiles</h2>
+        <a asp-action="Create" class="btn btn-success">Create Profile Manually</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No profiles yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>City</th>
+                        <th>Completion</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var profile in Model)
+                    {
+                        var completion = GetCompletionPercent(profile);
+                        <tr>
+                            <td>@profile.FullName</td>
+                            <td>@profile.Email</td>
+                            <td>@profile.PhoneNumber</td>
+                            <td>@profile.City</td>
+                            <td style="width: 200px;">
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>@($"{completion}%")</span>
+                                    <span>@GetCompletionLabel(completion)</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width:@completion%"
+                                         aria-valuenow="@completion" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-status @(completion == 100 ? "bg-success" : completion >= 60 ? "bg-warning text-dark" : "bg-danger")">
+                                    @(completion == 100 ? "Complete" : completion >= 60 ? "Partial" : "Incomplete")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@profile.Id" class="btn btn-outline-info">Details</a>
+                                    <a asp-action="Edit" asp-route-id="@profile.Id" class="btn btn-outline-warning">Edit</a>
+                                    <a asp-action="Delete" asp-route-id="@profile.Id" class="btn btn-outline-danger">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@functions {
+    private int GetCompletionPercent(AutoMate_app.Models.UserProfile profile)
+    {
+        var fields = new[]
+        {
+            profile.FullName,
+            profile.Email,
+            profile.PhoneNumber,
+            profile.Address,
+            profile.City
+        };
+
+        var filled = fields.Count(value => !string.IsNullOrWhiteSpace(value));
+        return (int)((double)filled / fields.Length * 100);
+    }
+
+    private string GetCompletionLabel(int percent) =>
+        percent switch
+        {
+            >= 100 => "Complete",
+            >= 60 => "Good",
+            >= 30 => "Needs Info",
+            _ => "Start Filling"
+        };
+}

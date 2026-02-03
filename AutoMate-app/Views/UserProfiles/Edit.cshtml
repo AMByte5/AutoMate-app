@@ -1,0 +1,119 @@
+﻿@model AutoMate_app.Models.UserProfile
+@{
+    ViewData["Title"] = "Edit Profile";
+    var completion = GetCompletionPercent(Model);
+}
+
+<style>
+    body {
+        background-color: #141414;
+        color: #f5f5f5;
+    }
+
+    .form-card {
+        background: #1b1b1b;
+        border-radius: 18px;
+        border: 1px solid #2b2b2b;
+    }
+
+    .form-control {
+        background-color: #262626;
+        border: 1px solid #3a3a3a;
+        color: #f1f1f1;
+    }
+
+        .form-control:focus {
+            background-color: #2f2f2f;
+            border-color: #7c4dff;
+            color: #fff;
+        }
+
+    .progress {
+        height: 10px;
+        background-color: #2e2e2e;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, #7c4dff, #b388ff);
+    }
+</style>
+
+<div class="form-card p-4 shadow-lg">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Edit Profile</h2>
+            <small class="text-muted">Keep your information up to date.</small>
+        </div>
+        <div class="text-end">
+            <div class="small text-muted">Completion</div>
+            <div class="display-6 fw-bold">@completion%</div>
+        </div>
+    </div>
+
+    <div class="progress mb-4">
+        <div class="progress-bar" style="width:@completion%" role="progressbar"></div>
+    </div>
+
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserId" />
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Full Name</label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="PhoneNumber" class="form-label">Phone</label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="City" class="form-label">City</label>
+            <input asp-for="City" class="form-control" />
+            <span asp-validation-for="City" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Address" class="form-label">Address</label>
+            <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+@functions {
+    private int GetCompletionPercent(AutoMate_app.Models.UserProfile profile)
+    {
+        var fields = new[]
+        {
+            profile.FullName,
+            profile.Email,
+            profile.PhoneNumber,
+            profile.Address,
+            profile.City
+        };
+        var filled = fields.Count(value => !string.IsNullOrWhiteSpace(value));
+        return (int)((double)filled / fields.Length * 100);
+    }
+}

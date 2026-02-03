@@ -1,0 +1,963 @@
+﻿@model AutoMate_app.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = "Create Service Request";
+    var googleMapsKey = (string)ViewBag.GoogleMapsKey;
+}
+
+<style>
+    /* =========================
+               BASE & BACKGROUND
+               ========================= */
+    .am-shell {
+        min-height: calc(100vh - 72px);
+        position: relative;
+        padding: 24px 0 32px;
+        color: hsl(210 40% 96%);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .am-bg {
+        position: absolute;
+        inset: 0;
+        background: hsl(222 47% 6%);
+        overflow: hidden;
+        z-index: 0;
+    }
+
+        .am-bg::before,
+        .am-bg::after,
+        .am-bg .orb {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .am-bg::before {
+            width: 900px;
+            height: 520px;
+            top: 10%;
+            left: 5%;
+            background: radial-gradient(ellipse, hsla(217, 91%, 53%, 0.22), transparent 60%);
+        }
+
+        .am-bg::after {
+            width: 850px;
+            height: 520px;
+            top: 15%;
+            right: 5%;
+            background: radial-gradient(ellipse, hsla(160, 84%, 39%, 0.14), transparent 58%);
+        }
+
+        .am-bg .orb {
+            width: 900px;
+            height: 680px;
+            bottom: 0;
+            left: 40%;
+            background: radial-gradient(ellipse, hsla(239, 84%, 67%, 0.12), transparent 60%);
+        }
+
+    .am-container {
+        position: relative;
+        z-index: 1;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 12px;
+    }
+
+    @@media (min-width: 640px) {
+        .am-container {
+            padding: 0 16px;
+        }
+    }
+
+    @@media (min-width: 1024px) {
+        .am-container {
+            max-width: 960px;
+            padding: 0 20px;
+        }
+    }
+
+    @@media (min-width: 1280px) {
+        .am-container {
+            max-width: 1100px;
+        }
+    }
+
+    /* =========================
+               HEADER
+               ========================= */
+    .am-header {
+        margin-bottom: 24px;
+    }
+
+    .am-title {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin: 0 0 8px;
+        color: hsl(210 40% 96%);
+    }
+
+    @@media (min-width: 640px) {
+        .am-title {
+            font-size: 2.25rem;
+        }
+    }
+
+    .am-subtitle {
+        color: hsl(215 20% 65%);
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .am-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.1);
+        margin-top: 20px;
+        border: none;
+    }
+
+    /* =========================
+               GLASS CARD
+               ========================= */
+    .glass-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 25px 80px -12px rgba(0,0,0,0.5);
+        margin-bottom: 16px;
+    }
+
+    @@media (min-width: 640px) {
+        .glass-card {
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+        }
+    }
+
+    /* =========================
+               BRAND HEADER
+               ========================= */
+    .brand-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    @@media (min-width: 640px) {
+        .brand-bar {
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+    }
+
+    .brand-mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+        flex-shrink: 0;
+    }
+
+    @@media (min-width: 640px) {
+        .brand-mark {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+        }
+    }
+
+    .brand-mark img {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+    }
+
+    @@media (min-width: 640px) {
+        .brand-mark img {
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    .brand-mark svg {
+        width: 24px;
+        height: 24px;
+        color: hsl(217 91% 60%);
+    }
+
+    @@media (min-width: 640px) {
+        .brand-mark svg {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    .brand-name {
+        font-weight: 900;
+        font-size: 1rem;
+        letter-spacing: 0.2px;
+    }
+
+    @@media (min-width: 640px) {
+        .brand-name {
+            font-size: 1.125rem;
+        }
+    }
+
+    .brand-sub {
+        color: hsl(215 20% 65%);
+        font-size: 0.8125rem;
+        margin-top: 2px;
+    }
+
+    @@media (min-width: 640px) {
+        .brand-sub {
+            font-size: 0.875rem;
+        }
+    }
+
+    /* =========================
+               INFO PANEL CONTENT
+               ========================= */
+    .info-headline {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: -0.3px;
+        margin: 0 0 10px;
+        line-height: 1.2;
+    }
+
+    @@media (min-width: 640px) {
+        .info-headline {
+            font-size: 1.875rem;
+            margin: 0 0 12px;
+        }
+    }
+
+    .info-desc {
+        color: rgba(255,255,255,0.8);
+        margin-bottom: 20px;
+        max-width: 100%;
+        line-height: 1.6;
+        font-size: 0.9375rem;
+    }
+
+    @@media (min-width: 640px) {
+        .info-desc {
+            margin-bottom: 24px;
+            max-width: 500px;
+            font-size: 1rem;
+        }
+    }
+
+    /* =========================
+               TIP CARDS
+               ========================= */
+    .tips-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    @@media (min-width: 640px) {
+        .tips-grid {
+            gap: 16px;
+        }
+
+        .tips-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    }
+
+    .tip-card {
+        background: rgba(2, 6, 23, 0.4);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    @@media (min-width: 640px) {
+        .tip-card {
+            border-radius: 16px;
+            padding: 16px;
+        }
+    }
+
+    .tip-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    @@media (min-width: 640px) {
+        .tip-header {
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+    }
+
+    .tip-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: grid;
+        place-items: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    @@media (min-width: 640px) {
+        .tip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            font-size: 1.125rem;
+        }
+    }
+
+    .tip-title {
+        font-weight: 700;
+        color: hsl(210 40% 96%);
+        font-size: 0.9375rem;
+    }
+
+    @@media (min-width: 640px) {
+        .tip-title {
+            font-size: 1rem;
+        }
+    }
+
+    .tip-text {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    @@media (min-width: 640px) {
+        .tip-text {
+            font-size: 0.9375rem;
+        }
+    }
+
+    /* =========================
+               CHIPS & EXAMPLES
+               ========================= */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .chip-good {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        color: #6ee7b7;
+    }
+
+    .chip-bad {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+    }
+
+    .quote-box {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.9);
+        margin-top: 8px;
+    }
+
+    @@media (min-width: 640px) {
+        .quote-box {
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.9375rem;
+        }
+    }
+
+    .quote-box strong {
+        color: hsl(210 40% 96%);
+    }
+
+    .example-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    @@media (min-width: 640px) {
+        .example-group {
+            gap: 16px;
+            margin-top: 12px;
+        }
+    }
+
+    /* =========================
+               FEATURE PILLS
+               ========================= */
+    .feature-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 20px;
+    }
+
+    @@media (min-width: 640px) {
+        .feature-pills {
+            gap: 8px;
+            margin-top: 24px;
+        }
+    }
+
+    .feature-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.9);
+    }
+
+    @@media (min-width: 640px) {
+        .feature-pill {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* =========================
+               FORM STYLES
+               ========================= */
+    .form-card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+    }
+
+    @@media (min-width: 640px) {
+        .form-card-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    .form-card-sub {
+        color: hsl(215 20% 65%);
+        margin: 0 0 20px;
+        font-size: 0.875rem;
+    }
+
+    @@media (min-width: 640px) {
+        .form-card-sub {
+            margin: 0 0 24px;
+            font-size: 1rem;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    @@media (min-width: 640px) {
+        .form-group {
+            margin-bottom: 20px;
+        }
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 6px;
+    }
+
+    @@media (min-width: 640px) {
+        .form-label {
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+        }
+    }
+
+    .glass-input,
+    .glass-select,
+    .glass-textarea {
+        width: 100%;
+        background: rgba(2, 6, 23, 0.6);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: hsl(210 40% 96%);
+        font-size: 0.9375rem;
+        transition: all 0.2s ease;
+    }
+
+    @@media (min-width: 640px) {
+        .glass-input,
+        .glass-select,
+        .glass-textarea {
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 1rem;
+        }
+    }
+
+    .glass-input::placeholder,
+    .glass-textarea::placeholder {
+        color: hsl(215 20% 55%);
+    }
+
+    .glass-input:focus,
+    .glass-select:focus,
+    .glass-textarea:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        background: rgba(2, 6, 23, 0.7);
+    }
+
+    .glass-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        padding-right: 44px;
+        cursor: pointer;
+    }
+
+    .glass-textarea {
+        resize: none;
+        min-height: 100px;
+    }
+
+    /* Location input group */
+    .location-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    @@media (min-width: 640px) {
+        .location-group {
+            flex-direction: row;
+        }
+
+            .location-group .glass-input {
+                flex: 1;
+            }
+    }
+
+    .location-status {
+        font-size: 0.8125rem;
+        margin-top: 6px;
+    }
+
+    @@media (min-width: 640px) {
+        .location-status {
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+    }
+
+    .location-status.success {
+        color: #34d399;
+    }
+
+    .location-status.error {
+        color: #f87171;
+    }
+
+    .location-status.loading {
+        color: hsl(215 20% 65%);
+    }
+
+    /* =========================
+               BUTTONS
+               ========================= */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9375rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: linear-gradient(90deg, hsl(217 91% 45%), hsl(217 91% 55%));
+        color: white;
+        box-shadow: 0 14px 40px -10px rgba(37, 99, 235, 0.35);
+        width: 100%;
+    }
+
+    @@media (min-width: 640px) {
+        .btn-primary {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            width: auto;
+        }
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.1);
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.9);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        width: 100%;
+    }
+
+    @@media (min-width: 640px) {
+        .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            width: auto;
+        }
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    .btn-location {
+        padding: 11px 14px;
+        white-space: nowrap;
+    }
+
+    @@media (min-width: 640px) {
+        .btn-location {
+            padding: 12px 16px;
+        }
+    }
+
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    @@media (min-width: 640px) {
+        .btn-group {
+            flex-direction: row;
+            gap: 12px;
+        }
+
+            .btn-group .btn-primary {
+                flex: 1;
+            }
+    }
+
+    .text-danger {
+        color: #f87171;
+        font-size: 0.8125rem;
+        margin-top: 4px;
+    }
+
+    @@media (min-width: 640px) {
+        .text-danger {
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+<div class="am-shell">
+    <div class="am-bg">
+        <div class="orb"></div>
+    </div>
+
+    <div class="am-container">
+        <!-- Header -->
+        <div class="am-header">
+            <h1 class="am-title">Create Request</h1>
+            <p class="am-subtitle">
+                Submit with the right category, a clear description, and your location for faster response.
+            </p>
+            <hr class="am-divider" />
+        </div>
+
+        <!-- Info Panel -->
+        <div class="glass-card">
+            <div class="brand-bar">
+                <div class="brand-mark">
+                    <img src="~/images/automate-hero.png" alt="AutoMate" />
+                </div>
+                <div>
+                    <div class="brand-name">AutoMate_application</div>
+                    <div class="brand-sub">YOUR POWERED MATE</div>
+                </div>
+            </div>
+
+            <h2 class="info-headline">Welcome back</h2>
+            <p class="info-desc">
+                Log in to request roadside help, manage your profile, and chat with mechanics in real time.
+            </p>
+
+            <div class="tips-grid">
+                <div class="tips-row">
+                    <div class="tip-card">
+                        <div class="tip-header">
+                            <div class="tip-icon">✅</div>
+                            <div class="tip-title">What to include</div>
+                        </div>
+                        <div class="tip-text">
+                            Symptoms, when it happens, how severe it is, and any recent changes (repair/oil/battery).
+                        </div>
+                    </div>
+
+                    <div class="tip-card">
+                        <div class="tip-header">
+                            <div class="tip-icon">🧭</div>
+                            <div class="tip-title">Good structure</div>
+                        </div>
+                        <div class="tip-text">
+                            Symptom → When → Severity → Recent change. Simple and mechanic-ready.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-card">
+                    <div class="tip-header">
+                        <div class="tip-icon">📝</div>
+                        <div class="tip-title">Quick examples</div>
+                    </div>
+
+                    <div class="example-group">
+                        <div>
+                            <span class="chip chip-good">✓ Good</span>
+                            <div class="quote-box">
+                                Car won't start. One click sound. <strong>Battery light</strong> was on yesterday. Happens after parking overnight.
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="chip chip-bad">✗ Bad</span>
+                            <div class="quote-box">
+                                My car is broken.
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-pills">
+                <span class="feature-pill">AI-powered suggestions</span>
+                <span class="feature-pill">Faster diagnosis</span>
+                <span class="feature-pill">Location-aware dispatch</span>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="glass-card">
+            <h2 class="form-card-title">Create Service Request</h2>
+            <p class="form-card-sub">Fill in the details below to get help.</p>
+
+            <form asp-action="Create">
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <!-- Service Type -->
+                <div class="form-group">
+                    <label asp-for="ServiceTypeId" class="form-label"></label>
+                    <select asp-for="ServiceTypeId" class="glass-select">
+                        <option value="">-- Select a service type --</option>
+                        @{
+                            var items = (IEnumerable<dynamic>)ViewBag.ServiceTypeGrouped;
+                            foreach (var group in items.GroupBy(i => (string)i.Group))
+                            {
+                                <optgroup label="@group.Key">
+                                    @foreach (var item in group)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </optgroup>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
+                </div>
+
+                <!-- Problem Description -->
+                <div class="form-group">
+                    <label asp-for="ProblemDescription" class="form-label"></label>
+                    <textarea asp-for="ProblemDescription"
+                              class="glass-textarea"
+                              rows="4"
+                              placeholder="Example: Car won't start, one click sound, battery light was on yesterday..."></textarea>
+                    <span asp-validation-for="ProblemDescription" class="text-danger"></span>
+                </div>
+
+                <!-- Location -->
+                <div class="form-group">
+                    <label asp-for="LocationAddress" class="form-label">Location</label>
+                    <div class="location-group">
+                        <input asp-for="LocationAddress"
+                               class="glass-input"
+                               placeholder="Street, city, or landmark"
+                               id="locationAddress" />
+                        <button type="button"
+                                class="btn-secondary btn-location"
+                                onclick="getCurrentLocation()"
+                                id="locationBtn">
+                            📍 Use My Location
+                        </button>
+                    </div>
+                    <span asp-validation-for="LocationAddress" class="text-danger"></span>
+                    <div id="locationStatus" class="location-status"></div>
+                </div>
+
+                <!-- Hidden coordinates -->
+                <input type="hidden" asp-for="LocationLatitude" id="locationLatitude" />
+                <input type="hidden" asp-for="LocationLongitude" id="locationLongitude" />
+
+                <div class="btn-group">
+                    <button type="submit" class="btn-primary">Create Request</button>
+                    <a asp-action="Index" class="btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        const googleMapsApiKey = '@googleMapsKey';
+        const locationAddressInput = document.getElementById('locationAddress');
+        const locationLatInput = document.getElementById('locationLatitude');
+        const locationLonInput = document.getElementById('locationLongitude');
+        const locationStatus = document.getElementById('locationStatus');
+        const locationBtn = document.getElementById('locationBtn');
+
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                showLocationError('Geolocation is not supported by this browser.');
+                return;
+            }
+
+            locationBtn.disabled = true;
+            locationBtn.textContent = '📍 Getting location...';
+            locationStatus.className = 'location-status loading';
+            locationStatus.textContent = 'Fetching location...';
+            locationAddressInput.value = '';
+            locationAddressInput.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    locationLatInput.value = latitude;
+                    locationLonInput.value = longitude;
+
+                    locationStatus.className = 'location-status loading';
+                    locationStatus.textContent = `📍 Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (Accuracy: ${Math.round(accuracy)}m) - Getting address...`;
+
+                    const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}`;
+
+                    try {
+                        const response = await fetch(geocodingUrl);
+                        const data = await response.json();
+
+                        if (data.status === 'OK' && data.results.length > 0) {
+                            const address = data.results[0].formatted_address;
+                            locationAddressInput.value = address;
+                            locationStatus.className = 'location-status success';
+                            locationStatus.textContent = `✅ Location found: ${address}`;
+                        } else {
+                            locationAddressInput.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                            locationStatus.className = 'location-status error';
+                            locationStatus.textContent = `⚠️ Unable to retrieve address. Using coordinates.`;
+                        }
+                    } catch (error) {
+                        locationAddressInput.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                        locationStatus.className = 'location-status error';
+                        locationStatus.textContent = `⚠️ Geocoding failed. Using coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                    } finally {
+                        locationAddressInput.disabled = false;
+                        locationBtn.disabled = false;
+                        locationBtn.textContent = '📍 Use My Location';
+                    }
+                },
+                function (error) {
+                    let errorMessage = 'Unable to get your location.';
+
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location access denied. Please enable location permissions.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out.';
+                            break;
+                    }
+
+                    showLocationError(errorMessage);
+                    locationBtn.disabled = false;
+                    locationBtn.textContent = '📍 Use My Location';
+                }
+            );
+        }
+
+        function showLocationError(message) {
+            locationStatus.className = 'location-status error';
+            locationStatus.textContent = `❌ ${message}`;
+            locationAddressInput.disabled = false;
+        }
+    </script>
+}

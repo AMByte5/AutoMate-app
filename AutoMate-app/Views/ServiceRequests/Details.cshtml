@@ -1,0 +1,206 @@
+﻿@using AutoMate_app.Data
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using System.Text.Json
+@model AutoMate_app.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = "Service Request Details";
+}
+
+<style>
+    body {
+        background-color: #0d0d0d;
+        color: #f9fafb;
+    }
+
+    .detail-card {
+        background: #111827;
+        border-radius: 16px;
+        border: 1px solid #1f2937;
+        padding: 1.5rem;
+        color: #f9fafb;
+
+    }
+
+    .ai-card {
+        background: linear-gradient(135deg, #1e3a8a, #312e81);
+        border-radius: 16px;
+        border: 1px solid #3b82f6;
+        padding: 1.5rem;
+        color: #f9fafb;
+    }
+
+    .label-text {
+        color: #9ca3af;
+        font-size: .85rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .badge-urgency-high {
+        background: #dc2626;
+        color: #fee2e2;
+    }
+
+    .badge-urgency-medium {
+        background: #f59e0b;
+        color: #fef3c7;
+    }
+
+    .badge-urgency-low {
+        background: #10b981;
+        color: #d1fae5;
+    }
+</style>
+
+<h1>Service Request Details</h1>
+<hr />
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="detail-card mb-4">
+            <h4>Request Information</h4>
+            <hr class="border-secondary" />
+            <dl class="row">
+                <dt class="col-sm-3 label-text">Problem Description</dt>
+                <dd class="col-sm-9">@Model.ProblemDescription</dd>
+
+                <dt class="col-sm-3 label-text">Location</dt>
+                <dd class="col-sm-9">
+                    @Model.LocationAddress
+                    @if (Model.LocationLatitude.HasValue && Model.LocationLongitude.HasValue)
+                    {
+                        <br />
+                        <small class="text-muted">Coordinates: @Model.LocationLatitude, @Model.LocationLongitude</small>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 label-text">Service Type</dt>
+                <dd class="col-sm-9">@Model.ServiceType?.Name</dd>
+
+                <dt class="col-sm-3 label-text">Status</dt>
+                <dd class="col-sm-9">
+                    @{
+                        var statusClass = Model.Status switch
+                        {
+                            ServiceStatus.Pending => "badge bg-warning text-dark",
+                            ServiceStatus.Accepted => "badge bg-info",
+                            ServiceStatus.Rejected => "badge bg-danger",
+                            ServiceStatus.Completed => "badge bg-success",
+                            _ => "badge bg-secondary"
+                        };
+                    }
+                    <span class="@statusClass">@Model.Status</span>
+                </dd>
+
+                <dt class="col-sm-3 label-text">Created At</dt>
+                <dd class="col-sm-9">@Model.CreatedAt.ToString("MMMM dd, yyyy 'at' hh:mm tt")</dd>
+
+                <dt class="col-sm-3 label-text">Client</dt>
+                <dd class="col-sm-9">@Model.Client?.Email</dd>
+
+                <dt class="col-sm-3 label-text">Mechanic</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Mechanic != null)
+                    {
+                        @Model.Mechanic.Email
+                    }
+                    else
+                    {
+                        <span class="text-muted">Not assigned yet</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        @if (Model.AiCalculatedAt.HasValue)
+        {
+            <div class="ai-card mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <h5 class="mb-0 me-2">🤖 AI Recommendation</h5>
+                    <span class="badge bg-primary">Gemini AI</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.AiSuggestedServiceType))
+                {
+                    <div class="mb-3">
+                        <div class="label-text">Suggested Service Type</div>
+                        <div class="fs-5">@Model.AiSuggestedServiceType</div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.AiUrgency))
+                {
+                    <div class="mb-3">
+                        <div class="label-text">Urgency Level</div>
+                        @{
+                            var urgencyClass = Model.AiUrgency switch
+                            {
+                                "High" => "badge-urgency-high",
+                                "Medium" => "badge-urgency-medium",
+                                "Low" => "badge-urgency-low",
+                                _ => "badge bg-secondary"
+                            };
+                        }
+                        <span class="badge @urgencyClass">@Model.AiUrgency</span>
+                    </div>
+                }
+
+                @if (Model.AiRecommendTowing == true)
+                {
+                    <div class="mb-3">
+                        <span class="badge bg-danger">⚠️ Towing Recommended</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.AiPossibleReasonsJson))
+                {
+                    <div class="mb-3">
+                        <div class="label-text">Possible Reasons</div>
+                        <ul class="mb-0">
+                            @try
+                            {
+                                var reasons = JsonSerializer.Deserialize<List<string>>(Model.AiPossibleReasonsJson);
+                                @foreach (var reason in reasons)
+                                {
+                                    <li>@reason</li>
+                                }
+                            }
+                            catch
+                            {
+                                <li class="text-muted">Unable to parse reasons</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <div class="small text-muted mt-3">
+                    Generated at @Model.AiCalculatedAt.Value.ToLocalTime().ToString("MM/dd/yyyy hh:mm tt")
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="detail-card">
+                <p class="label-text mb-0">No AI recommendation available for this request.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    <a asp-controller="Chat" asp-action="Index" asp-route-initialMessage="@Model.ProblemDescription"
+       class="btn btn-info  ms-2">💬 Ask our ProAI Assistant</a>
+
+    @if (Model.Status == ServiceStatus.Completed &&
+        !await Context.RequestServices.GetRequiredService<ApplicationDbContext>()
+        .Reviews.AnyAsync(r => r.ServiceRequestId == Model.Id && r.ClientId == User.FindFirstValue(ClaimTypes.NameIdentifier)))
+    {
+        <a asp-controller="Reviews" asp-action="Create" asp-route-serviceRequestId="@Model.Id" class="btn btn-primary">Leave Review</a>
+    }
+</div>

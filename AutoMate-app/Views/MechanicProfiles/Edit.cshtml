@@ -1,0 +1,65 @@
+﻿@model AutoMate_app.Models.MechanicProfile
+
+@{
+    ViewData["Title"] = "Edit Mechanic Profile";
+}
+
+<style>
+    body {
+        background: #0b0b0b;
+        color: #f0f0f0;
+    }
+
+    .form-card {
+        background: #181818;
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid #222;
+    }
+
+    .form-control {
+        background: #232323;
+        border: 1px solid #333;
+        color: #fff;
+    }
+</style>
+
+<div class="form-card">
+    <h2 class="mb-4">Update Your Garage Info</h2>
+
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="AverageRating" />
+        <input type="hidden" asp-for="TotalReviews" />
+        <input type="hidden" asp-for="IsVerifiedByAdmin" />
+
+        <div class="mb-3">
+            <label asp-for="GarageName" class="form-label"></label>
+            <input asp-for="GarageName" class="form-control" />
+            <span asp-validation-for="GarageName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Specialization" class="form-label"></label>
+            <textarea asp-for="Specialization" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Specialization" class="text-danger"></span>
+        </div>
+
+        <div class="alert alert-dark">
+            Ratings and review counts update automatically based on client reviews.
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

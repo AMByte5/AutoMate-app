@@ -1,0 +1,201 @@
+﻿@model IEnumerable<AutoMate_app.Models.ServiceRequest>
+
+@{
+    ViewData["Title"] = "Service Requests";
+}
+
+<h1>Service Requests</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Request</a>
+</p>
+
+<!-- Search and Filter Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Search & Filter</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="searchString" class="form-label">Search</label>
+                <input type="text" class="form-control" name="searchString" id="searchString"
+                       value="@ViewBag.SearchString" placeholder="Description, Location, Email..." />
+            </div>
+
+            <div class="col-md-2">
+                <label for="serviceTypeId" class="form-label">Service Type</label>
+                <select class="form-select" name="serviceTypeId" id="serviceTypeId" asp-items="ViewBag.ServiceTypeId">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" name="status" id="status" asp-items="ViewBag.Status">
+                    <option value="">All Statuses</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="startDate" id="startDate" value="@ViewBag.StartDate" />
+            </div>
+
+            <div class="col-md-2">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" name="endDate" id="endDate" value="@ViewBag.EndDate" />
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </div>
+        </form>
+        <div class="mt-2">
+            <a asp-action="Index" class="btn btn-secondary btn-sm">Clear Filters</a>
+        </div>
+    </div>
+</div>
+
+<!-- Results Count -->
+@if (Model.Any())
+{
+    <p class="text-muted">Showing @Model.Count() service request(s)</p>
+}
+else
+{
+    <p class="text-muted">No service requests found.</p>
+}
+
+<!-- Service Requests Table -->
+@if (Model.Any())
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.DateSortParm"
+                       asp-route-searchString="@ViewBag.SearchString"
+                       asp-route-serviceTypeId="@ViewBag.ServiceTypeId"
+                       asp-route-status="@ViewBag.Status"
+                       class="text-white text-decoration-none">
+                        Date
+                        @if (ViewBag.CurrentSort == "date_desc")
+                        {
+                            <span>▼</span>
+                        }
+                        else
+                        {
+                            <span>▲</span>
+                        }
+                    </a>
+                </th>
+                <th>Service Type</th>
+                <th>Problem Description</th>
+                <th>Location</th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.StatusSortParm"
+                       asp-route-searchString="@ViewBag.SearchString"
+                       asp-route-serviceTypeId="@ViewBag.ServiceTypeId"
+                       asp-route-status="@ViewBag.Status"
+                       class="text-white text-decoration-none">
+                        Status
+                        @if (ViewBag.CurrentSort == "status_desc")
+                        {
+                            <span>▼</span>
+                        }
+                        else if (ViewBag.CurrentSort == "Status")
+                        {
+                            <span>▲</span>
+                        }
+                    </a>
+                </th>
+                <th>Client</th>
+                <th>Mechanic</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @item.CreatedAt.ToString("MM/dd/yyyy")
+                        <br />
+                        <small class="text-muted">@item.CreatedAt.ToString("hh:mm tt")</small>
+                    </td>
+                    <td>
+                        @if (item.ServiceType != null)
+                        {
+                            @item.ServiceType.Name
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.ProblemDescription.Length > 50)
+                        {
+                            @item.ProblemDescription.Substring(0, 50)
+                            <span>...</span>
+                        }
+                        else
+                        {
+                            @item.ProblemDescription
+                        }
+                    </td>
+                    <td>
+                        @item.LocationAddress
+                    </td>
+                    <td>
+                        @{
+                            var statusClass = item.Status switch
+                            {
+                                ServiceStatus.Pending => "badge bg-warning",
+                                ServiceStatus.Accepted => "badge bg-info",
+                                ServiceStatus.Rejected => "badge bg-danger",
+                                ServiceStatus.Completed => "badge bg-success",
+                                _ => "badge bg-secondary"
+                            };
+                        }
+                        <span class="@statusClass">@item.Status</span>
+                    </td>
+                    <td>
+                        @if (item.Client != null)
+                        {
+                            @item.Client.Email
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Mechanic != null)
+                        {
+                            @item.Mechanic.Email
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not Assigned</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                            @if(User.IsInRole("Admin") || User.IsInRole("Mechanic"))
+		                    {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                            }
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

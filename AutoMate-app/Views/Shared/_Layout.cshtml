@@ -1,0 +1,947 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AutoMate_app</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AutoMate_app.styles.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================
+                   GLOBAL STYLES
+                   ========================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: hsl(222 47% 6%);
+            color: hsl(210 40% 96%);
+            min-height: 100vh;
+        }
+
+        /* =========================
+                   NAVBAR
+                   ========================= */
+        .am-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .am-navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+			gap: 24px;
+        }
+
+        /* Logo */
+        .am-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: hsl(210 40% 98%);
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            margin: 0px;
+        }
+
+        .am-logo-img {
+            height: 40px; /* adjust as needed */
+            width: auto;
+        }
+
+        .am-logo-text{
+			font-size: 1.5rem;
+        }
+
+        /* .am-logo-text span {
+            background: linear-gradient(90deg, hsl(217 91% 65%), hsl(280 80% 70%));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            
+            
+        } */
+
+        /* Desktop Navigation */
+        .am-nav-links {
+            display: none;
+            align-items: center;
+            
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        @@media (min-width: 1024px) {
+            .am-nav-links
+
+        {
+            display: flex;
+        }
+
+        }
+
+        .am-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: hsl(215 20% 65%);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+            .am-nav-link:hover {
+                color: hsl(210 40% 98%);
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .am-nav-link.active {
+                color: hsl(217 91% 65%);
+                background: rgba(59, 130, 246, 0.1);
+            }
+
+            .am-nav-link .nav-icon {
+                font-size: 1rem;
+            }
+
+            /* Chat badge */
+            .am-nav-link.chat-link {
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                color: hsl(160 84% 55%);
+            }
+
+                .am-nav-link.chat-link:hover {
+                    background: rgba(16, 185, 129, 0.15);
+                    color: hsl(160 84% 65%);
+                }
+
+        /* Admin Dropdown */
+        .am-dropdown {
+            position: relative;
+        }
+
+        .am-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: hsl(280 80% 70%);
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 100);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .am-dropdown-toggle:hover {
+                background: rgba(168, 85, 247, 0.15);
+                color: hsl(280 80% 80%);
+            }
+
+            .am-dropdown-toggle::after {
+                content: '';
+                width: 0;
+                height: 0;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid currentColor;
+                margin-left: 4px;
+                transition: transform 0.2s ease;
+            }
+
+        .am-dropdown:hover .am-dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .am-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            min-width: 200px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.5);
+            list-style: none;
+        }
+
+        .am-dropdown:hover .am-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .am-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: hsl(215 20% 70%);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+        }
+
+            .am-dropdown-item:hover {
+                background: rgba(255, 255, 255, 0.05);
+                color: hsl(210 40% 98%);
+            }
+
+            .am-dropdown-item .item-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.05);
+                display: grid;
+                place-items: center;
+                font-size: 0.875rem;
+            }
+
+        /* Right side actions */
+        .am-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Mobile Menu Toggle */
+        .am-mobile-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .am-mobile-toggle:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .am-mobile-toggle span {
+                display: block;
+                width: 20px;
+                height: 2px;
+                background: hsl(210 40% 96%);
+                position: relative;
+                transition: all 0.3s ease;
+            }
+
+                .am-mobile-toggle span::before,
+                .am-mobile-toggle span::after {
+                    content: '';
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background: inherit;
+                    left: 0;
+                    transition: all 0.3s ease;
+                }
+
+                .am-mobile-toggle span::before {
+                    top: -6px;
+                }
+
+                .am-mobile-toggle span::after {
+                    top: 6px;
+                }
+
+            .am-mobile-toggle.active span {
+                background: transparent;
+            }
+
+                .am-mobile-toggle.active span::before {
+                    top: 0;
+                    transform: rotate(45deg);
+                    background: hsl(210 40% 96%);
+                }
+
+                .am-mobile-toggle.active span::after {
+                    top: 0;
+                    transform: rotate(-45deg);
+                    background: hsl(210 40% 96%);
+                }
+
+        @@media (min-width: 1024px) {
+            .am-mobile-toggle
+
+        {
+            display: none;
+        }
+
+        }
+
+        /* Mobile Menu */
+        .am-mobile-menu {
+            display: none;
+            position: fixed;
+            top: 72px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 6, 23, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+            .am-mobile-menu.active {
+                display: block;
+                animation: slideDown 0.3s ease;
+            }
+
+        @@keyframes slideDown {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .am-mobile-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .am-mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: hsl(215 20% 70%);
+            font-weight: 600;
+            font-size: 1.0625rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s ease;
+        }
+
+            .am-mobile-nav-link:hover,
+            .am-mobile-nav-link.active {
+                background: rgba(59, 130, 246, 0.1);
+                border-color: rgba(59, 130, 246, 0.2);
+                color: hsl(217 91% 65%);
+            }
+
+            .am-mobile-nav-link.chat-link {
+                background: rgba(16, 185, 129, 0.1);
+                border-color: rgba(16, 185, 129, 0.2);
+                color: hsl(160 84% 55%);
+            }
+
+        .am-mobile-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 16px 0;
+        }
+
+        .am-mobile-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: hsl(280 80% 70%);
+            padding: 8px 20px;
+            margin-bottom: 8px;
+        }
+
+        /* Main Content Wrapper */
+        .am-main-content {
+            padding-top: 72px;
+            min-height: calc(100vh - 72px);
+        }
+
+        /* Footer */
+        .am-footer {
+            background: rgba(2, 6, 23, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+        }
+
+        .am-footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .am-footer-text {
+            color: hsl(215 20% 55%);
+            font-size: 0.875rem;
+        }
+
+        .am-footer-link {
+            color: hsl(217 91% 65%);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+
+            .am-footer-link:hover {
+                color: hsl(217 91% 75%);
+            }
+
+        @@media (min-width: 1024px) {
+            .am-mobile-menu
+
+        {
+            display: none !important;
+        }
+
+        }
+
+        /* ===== Auth buttons (new) ===== */
+        .am-auth {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @@media (min-width: 1024px) {
+            .am-auth
+
+        {
+            display: flex;
+        }
+
+        }
+
+        .am-user-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: hsl(210 40% 96%);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .am-auth-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.05);
+            color: hsl(210 40% 96%);
+        }
+
+            .am-auth-btn:hover {
+                background: rgba(255, 255, 255, 0.10);
+                color: hsl(210 40% 98%);
+            }
+
+            .am-auth-btn.primary {
+                background: rgba(59, 130, 246, 0.12);
+                border-color: rgba(59, 130, 246, 0.25);
+                color: hsl(217 91% 70%);
+            }
+
+                .am-auth-btn.primary:hover {
+                    background: rgba(59, 130, 246, 0.18);
+                    color: hsl(217 91% 78%);
+                }
+
+        .am-logout-btn {
+            cursor: pointer;
+        }
+
+        /* ===== Auth buttons (new) ===== */
+        .am-auth {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @@media (min-width: 1024px) {
+            .am-auth
+
+        {
+            display: flex;
+        }
+
+        }
+
+        .am-user-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: hsl(210 40% 96%);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .am-auth-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.05);
+            color: hsl(210 40% 96%);
+        }
+
+            .am-auth-btn:hover {
+                background: rgba(255, 255, 255, 0.10);
+                color: hsl(210 40% 98%);
+            }
+
+            .am-auth-btn.primary {
+                background: rgba(59, 130, 246, 0.12);
+                border-color: rgba(59, 130, 246, 0.25);
+                color: hsl(217 91% 70%);
+            }
+
+                .am-auth-btn.primary:hover {
+                    background: rgba(59, 130, 246, 0.18);
+                    color: hsl(217 91% 78%);
+                }
+
+        .am-logout-btn {
+            cursor: pointer;
+        }
+
+        /* =========================
+           FIX 1024px – 1132px NAVBAR
+           ========================= */
+
+        /* 1) Let the center nav take remaining space and shrink gracefully */
+        @@media (min-width: 1024px) {
+            .am-navbar-inner
+
+        {
+            justify-content: flex-start; /* instead of space-between */
+        }
+
+        .am-logo {
+            flex: 0 0 auto;
+        }
+
+        .am-nav-links {
+            flex: 1 1 auto; /* this is the key */
+            min-width: 0; /* allows flex children to shrink */
+            justify-content: center; /* keep centered like before */
+            gap: 6px; /* slightly tighter */
+        }
+
+        .am-nav-actions {
+            margin-left: auto; /* push actions to the far right */
+            flex: 0 0 auto;
+        }
+
+        .am-auth {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+
+        }
+
+        /* 2) In the “tight” range, slightly compress spacing/padding */
+        @@media (min-width: 1024px) and (max-width: 1132px) {
+            .am-navbar-inner
+
+        {
+            padding: 0 16px; /* was 24px */
+            gap: 14px; /* was 24px */
+        }
+
+        .am-nav-link {
+            padding: 8px 12px; /* was 10px 16px */
+            font-size: 0.9rem;
+        }
+
+        .am-user-pill {
+            max-width: 160px; /* was 260px (this prevents overflow) */
+        }
+
+        .am-auth-btn {
+            padding: 8px 12px; /* was 10px 14px */
+            font-size: 0.9rem;
+        }
+
+        }
+
+        /* 3) Optional safety: prevent any flex item from causing overflow */
+        .am-navbar-inner > * {
+            min-width: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="am-navbar">
+        <div class="am-navbar-inner">
+            <!-- Logo -->
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="am-logo">
+                
+                <div class="am-logo-text">AutoMate</div>
+            
+            </a>
+
+
+            <!-- Desktop Navigation -->
+            <ul class="am-nav-links">
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="am-nav-link">
+                        <span class="nav-icon">⌂</span>
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="ServiceRequests" asp-action="Index" class="am-nav-link">
+                        <span class="nav-icon">⇄</span>
+                        Requests
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="MechanicProfiles" asp-action="Index" class="am-nav-link">
+                        <span class="nav-icon">🔧</span>
+                        Mechanics
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Reviews" asp-action="Index" class="am-nav-link">
+                        <span class="nav-icon">☆<span>
+                        Reviews
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="UserProfiles" asp-action="MyProfile" class="am-nav-link">
+                        <span class="nav-icon">◉</span>
+                        My Profile
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Chat" asp-action="Index" class="am-nav-link chat-link">
+                        <span class="nav-icon">💬</span>
+                        Chat
+                    </a>
+                </li>
+
+                @* Admin Dropdown *@
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="am-dropdown">
+                        <div class="am-dropdown-toggle">
+                            <span>🛡️</span>
+                            Admin
+                        </div>
+                        <ul class="am-dropdown-menu">
+                            <li>
+                                <a asp-area="" asp-controller="Roles" asp-action="Index" class="am-dropdown-item">
+                                    <span class="item-icon">👥</span>
+                                    Roles
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-area="" asp-controller="Roles" asp-action="Assign" class="am-dropdown-item">
+                                    <span class="item-icon">🎯</span>
+                                    Assign Roles
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-area="" asp-controller="ServiceTypes" asp-action="Index" class="am-dropdown-item">
+                                    <span class="item-icon">⚙️</span>
+                                    Service Types
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+
+            <!-- Right Actions -->
+            <div class="am-nav-actions">
+
+                <!-- Auth (Desktop) -->
+                <div class="am-auth">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                         
+                        <span class="am-user-pill" title="@User.Identity?.Name">
+                            <span>👤</span>
+                            @User.Identity?.Name
+                        </span>
+
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+                            <button type="submit" class="am-auth-btn am-logout-btn">
+                                <span>🚪</span>
+                                Logout
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="am-auth-btn">
+                            <span>🔑</span>
+                            Login
+                        </a>
+
+                        <a asp-area="Identity" asp-page="/Account/Register" class="am-auth-btn primary">
+                            <span>✨</span>
+                            Register
+                        </a>
+                    }
+                </div>
+
+                <!-- Mobile Toggle -->
+                <button class="am-mobile-toggle" id="mobileToggle" onclick="toggleMobileMenu()">
+                    <span></span>
+                </button>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="am-mobile-menu" id="mobileMenu">
+        <ul class="am-mobile-nav">
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="am-mobile-nav-link">
+                    <span>🏠</span>
+                    Home
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="ServiceRequests" asp-action="Index" class="am-mobile-nav-link">
+                    <span>📋</span>
+                    Requests
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="MechanicProfiles" asp-action="Index" class="am-mobile-nav-link">
+                    <span>🔧</span>
+                    Mechanics
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Reviews" asp-action="Index" class="am-mobile-nav-link">
+                    <span>⭐</span>
+                    Reviews
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="UserProfiles" asp-action="MyProfile" class="am-mobile-nav-link">
+                    <span>👤</span>
+                    My Profile
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Chat" asp-action="Index" class="am-mobile-nav-link chat-link">
+                    <span>💬</span>
+                    Chat
+                </a>
+            </li>
+
+
+            @* Admin Section *@
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="am-mobile-divider"></div>
+                <div class="am-mobile-section-title">🛡️ Admin Panel</div>
+                <li>
+                    <a asp-area="" asp-controller="Roles" asp-action="Index" class="am-mobile-nav-link">
+                        <span>👥</span>
+                        Roles
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Roles" asp-action="Assign" class="am-mobile-nav-link">
+                        <span>🎯</span>
+                        Assign Roles
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="ServiceTypes" asp-action="Index" class="am-mobile-nav-link">
+                        <span>⚙️</span>
+                        Service Types
+                    </a>
+                </li>
+            }
+
+            <div class="am-mobile-divider"></div>
+
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <div class="am-mobile-section-title">Account</div>
+
+                <li>
+                    <div class="am-mobile-nav-link" style="cursor: default;">
+                        <span>👤</span>
+                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </li>
+
+                <li>
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+                        <button type="submit" class="am-mobile-nav-link" style="width:100%; text-align:left;">
+                            <span>🚪</span>
+                            Logout
+                        </button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <div class="am-mobile-section-title">Account</div>
+
+                <li>
+                    <a asp-area="Identity" asp-page="/Account/Login" class="am-mobile-nav-link">
+                        <span>🔑</span>
+                        Login
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-area="Identity" asp-page="/Account/Register" class="am-mobile-nav-link">
+                        <span>✨</span>
+                        Register
+                    </a>
+                </li>
+            }
+
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <main class="am-main-content">
+        <div>
+            @RenderBody()
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="am-footer">
+        <div class="am-footer-inner">
+            <span class="am-footer-text">© 2025 - AutoMate_app</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy" class="am-footer-link">
+                Privacy
+            </a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        function toggleMobileMenu() {
+            const toggle = document.getElementById('mobileToggle');
+            const menu = document.getElementById('mobileMenu');
+            toggle.classList.toggle('active');
+            menu.classList.toggle('active');
+            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+        }
+
+        // Close mobile menu on link click
+        document.querySelectorAll('.am-mobile-nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobileToggle').classList.remove('active');
+                document.getElementById('mobileMenu').classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Close on resize to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                document.getElementById('mobileToggle').classList.remove('active');
+                document.getElementById('mobileMenu').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

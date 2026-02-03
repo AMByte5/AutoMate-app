@@ -1,0 +1,106 @@
+﻿@model IEnumerable<AutoMate_app.Models.Review>
+
+@{
+    ViewData["Title"] = "Reviews";
+}
+
+<h1>Reviews</h1>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Review</a>
+</p>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No reviews found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Service Request</th>
+                <th>Mechanic</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= item.Rating)
+                            {
+                                <span class="text-warning">★</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">☆</span>
+                            }
+                        }
+                        <span class="ms-1">(@item.Rating)</span>
+                    </td>
+                    <td>
+                        @if (string.IsNullOrEmpty(item.Comment))
+                        {
+                            <span class="text-muted">No comment</span>
+                        }
+                        else
+                        {
+                            @(item.Comment.Length > 50 ? item.Comment.Substring(0, 50) + "..." : item.Comment)
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="ServiceRequests" asp-action="Details" asp-route-id="@item.ServiceRequestId">
+                            Request #@item.ServiceRequestId
+                        </a>
+                        @if (item.ServiceRequest?.ServiceType != null)
+                        {
+                            <br />
+                            <small class="text-muted">@item.ServiceRequest.ServiceType.Name</small>
+                        }
+                    </td>
+                    <td>
+                        @if (item.ServiceRequest?.Mechanic != null)
+                        {
+                            @item.ServiceRequest.Mechanic.Email
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Client != null)
+                        {
+                            @item.Client.Email
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @item.CreatedAt.ToString("MM/dd/yyyy")
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

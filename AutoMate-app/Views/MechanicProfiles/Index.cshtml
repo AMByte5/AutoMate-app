@@ -1,0 +1,182 @@
+﻿@model IEnumerable<AutoMate_app.Models.MechanicProfile>
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Mechanics";
+    bool showVerifiedOnly = ViewBag.ShowVerifiedOnly ?? true;
+    string sortOrder = ViewBag.SortOrder ?? "rating_desc";
+}
+
+<style>
+    body {
+        background: #0d0d0d;
+        color: #f9fafb;
+    }
+
+    .glass-card {
+        background: rgba(17,24,39,0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 18px;
+        border: 1px solid #1f2937;
+        color: #f9fafb;
+    }
+
+        .glass-card .form-label,
+        .glass-card .form-check-label {
+            color: #e5e7eb;
+        }
+
+    .form-control.bg-dark,
+    .form-select.bg-dark {
+        background-color: #111827 !important;
+        color: #f9fafb !important;
+        border-color: #374151;
+    }
+
+        .form-control.bg-dark::placeholder {
+            color: #9ca3af;
+        }
+
+    .rating-stars span {
+        font-size: 1.1rem;
+    }
+
+    .badge-verified {
+        background: linear-gradient(90deg,#22c55e,#4ade80);
+        color: #052e16;
+    }
+
+    .badge-unverified {
+        background: #b91c1c;
+        color: #fee2e2;
+    }
+
+    .tag {
+        border-radius: 999px;
+        background: #111827;
+        padding: .2rem .75rem;
+        font-size: .85rem;
+        color: #e5e7eb;
+    }
+</style>
+
+<div class="glass-card p-4 mb-4 shadow-lg">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h2 class="mb-3 mb-md-0">Find A Mechanic</h2>
+        <div>
+            <a asp-action="Create" class="btn btn-success me-2">Become a Mechanic</a>
+            <a asp-action="MyProfile" class="btn btn-outline-light">My Profile</a>
+        </div>
+    </div>
+
+    <form class="row g-3" method="get" asp-action="Index">
+        <div class="col-md-4">
+            <label for="searchString" class="form-label small text-uppercase">Search</label>
+            <input type="text"
+                   id="searchString"
+                   name="searchString"
+                   value="@ViewBag.SearchString"
+                   class="form-control bg-dark"
+                   placeholder="Garage, specialization, email..." />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label small text-uppercase">Sort By</label>
+            <select name="sortOrder" class="form-select bg-dark">
+                <option value="rating_desc"
+                        selected="@(sortOrder == "rating_desc" ? "selected" : null)">
+                    Rating (High → Low)
+                </option>
+                <option value="rating_asc"
+                        selected="@(sortOrder == "rating_asc" ? "selected" : null)">
+                    Rating (Low → High)
+                </option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check form-switch">
+                <!-- ensures a value is always sent -->
+                <input type="hidden" name="showVerifiedOnly" value="false" />
+
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="showVerifiedOnly"
+                       name="showVerifiedOnly"
+                       value="true"
+                       @(showVerifiedOnly ? "checked" : "") />
+
+                <label class="form-check-label" for="showVerifiedOnly">
+                    Verified Mechanics Only
+                </label>
+            </div>
+        </div>
+
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Apply</button>
+        </div>
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-center" style="color:#e5e7eb;">No mechanics match your filters.</p>
+}
+else
+{
+    <div class="row gy-4">
+        @foreach (var mechanic in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="glass-card p-4 h-100 position-relative shadow">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="tag">
+                            @(string.IsNullOrWhiteSpace(mechanic.Specialization)
+                                                ? "General Technician"
+                                                : mechanic.Specialization)
+                </span>
+                <span class="badge @(mechanic.IsVerifiedByAdmin ? "badge-verified" : "badge-unverified")">
+                    @(mechanic.IsVerifiedByAdmin ? "Verified" : "Pending")
+                </span>
+            </div>
+
+                    <h3 class="h4 mb-1">@mechanic.GarageName</h3>
+                    <div class="small" style="color:#d1d5db;">@mechanic.User?.Email</div>
+
+                    <div class="rating-stars mb-2">
+                @{
+                            var rounded = Math.Round(mechanic.AverageRating);
+                        }
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= rounded)
+                            {
+                                <span class="text-warning">★</span>
+                            }
+                            else
+                            {
+                                <span style="color:#4b5563;">☆</span>
+                            }
+                        }
+                        <span class="ms-2">@mechanic.AverageRating.ToString("0.0")</span>
+                        <span class="small" style="color:#d1d5db;">(@mechanic.TotalReviews reviews)</span>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a asp-action="Details"
+                           asp-route-id="@mechanic.Id"
+                           class="btn btn-outline-light btn-sm flex-grow-1">
+                            View Profile
+                        </a>
+                        <a asp-controller="ServiceRequests"
+                           asp-action="Create"
+                           class="btn btn-primary btn-sm flex-grow-1">
+                            Book
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
