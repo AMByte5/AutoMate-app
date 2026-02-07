@@ -1,5 +1,4 @@
 ﻿using AutoMate_app.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,11 +22,6 @@ namespace AutoMate_app.Controllers
             return View(rolesList);
         }
 
-        // GET: RoleController/Details/5
-        public ActionResult Details(string id)
-        {
-            return View();
-        }
 
         // GET: RoleController/Create
         public ActionResult Create()
@@ -38,63 +32,115 @@ namespace AutoMate_app.Controllers
         // POST: RoleController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(RoleVM formRole)
+        public async Task<IActionResult> Create(RoleVM formRole)
         {
-            try
-            {
-                IdentityRole role = new IdentityRole(formRole.RoleName);
-                var result = _roleManager.CreateAsync(role).Result;
-                if (result.Succeeded)
-                    return RedirectToAction(nameof(Index));
-                else
-                    return View();
-            }
-            catch
-            {
-                return View();
-            }
+            ModelState.Remove(nameof(formRole.Id)); // or "Id"
+
+            if (!ModelState.IsValid) return View(formRole);
+
+            var role = new IdentityRole(formRole.RoleName);
+            var result = await _roleManager.CreateAsync(role);
+
+            if (result.Succeeded)
+                return RedirectToAction(nameof(Index));
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+
+            return View(formRole);
         }
 
-        // GET: RoleController/Edit/5
-        public ActionResult Edit(string id)
+        // GET: Role/Edit/{id}
+        public async Task<IActionResult> Edit(string id)
         {
-            return View();
+            if (string.IsNullOrEmpty(id))
+                return NotFound();
+
+            var role = await _roleManager.FindByIdAsync(id);
+            if (role == null)
+                return NotFound();
+
+            var vm = new RoleVM
+            {
+                Id = role.Id,
+                RoleName = role.Name
+            };
+
+            return View(vm); // Views/Role/Edit.cshtml
         }
 
-        // POST: RoleController/Edit/5
+        // POST: Role/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(String id, IFormCollection collection)
+        public async Task<IActionResult> Edit(RoleVM formRole)
         {
-            try
-            {
+            if (!ModelState.IsValid)
+                return View(formRole);
+
+            var role = await _roleManager.FindByIdAsync(formRole.Id);
+            if (role == null)
+                return NotFound();
+
+            role.Name = formRole.RoleName;
+
+            var result = await _roleManager.UpdateAsync(role);
+
+            if (result.Succeeded)
                 return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+
+            return View(formRole);
         }
 
-        // GET: RoleController/Delete/5
-        public ActionResult Delete(string id)
+        // GET: Role/Delete/{id}
+        public async Task<IActionResult> Delete(string id)
         {
-            return View();
+            if (string.IsNullOrEmpty(id))
+                return NotFound();
+
+            var role = await _roleManager.FindByIdAsync(id);
+            if (role == null)
+                return NotFound();
+
+            var vm = new RoleVM
+            {
+                Id = role.Id,
+                RoleName = role.Name
+            };
+
+            return View(vm); // will look for Views/Role/Delete.cshtml
         }
 
-        // POST: RoleController/Delete/5
-        [HttpPost]
+
+        // POST: Role/Delete/{id}
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(string id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            try
+            if (string.IsNullOrEmpty(id))
+                return NotFound();
+
+            var role = await _roleManager.FindByIdAsync(id);
+            if (role == null)
+                return NotFound();
+
+            var result = await _roleManager.DeleteAsync(role);
+
+            if (!result.Succeeded)
             {
-                return RedirectToAction(nameof(Index));
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                // return same confirmation page with errors
+                var vm = new RoleVM { Id = role.Id, RoleName = role.Name };
+                return View("Delete", vm);
             }
-            catch
-            {
-                return View();
-            }
+
+            return RedirectToAction(nameof(Index));
         }
+
+
     }
 }
