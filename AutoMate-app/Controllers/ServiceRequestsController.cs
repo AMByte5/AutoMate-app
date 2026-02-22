@@ -1,6 +1,7 @@
 ﻿using AutoMate_app.Data;
 using AutoMate_app.Models;
 using AutoMate_app.Models.Options;
+using AutoMate_app.Models.ViewModels;
 using AutoMate_app.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -8,11 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace AutoMate_app.Controllers
 {
@@ -242,49 +239,58 @@ namespace AutoMate_app.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ServiceTypeId,ProblemDescription,LocationAddress,LocationLatitude,LocationLongitude")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Create(CreateServiceRequestVM vm)
         {
-            // Clear validation errors for fields we set in the controller
-            ModelState.Remove(nameof(ServiceRequest.ClientId));
-            ModelState.Remove(nameof(ServiceRequest.Client));
-            ModelState.Remove(nameof(ServiceRequest.ServiceType));
-            ModelState.Remove(nameof(ServiceRequest.Status));
-            ModelState.Remove(nameof(ServiceRequest.CreatedAt));
-            ModelState.Remove(nameof(ServiceRequest.MechanicId));
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Set fields that aren't in the form
-                serviceRequest.ClientId = _userManager.GetUserId(User);
-                serviceRequest.Status = ServiceStatus.Pending;
-                serviceRequest.CreatedAt = DateTime.UtcNow;
+                // Repopulate dropdown if validation fails
+                ViewBag.ServiceTypeGrouped = _context.ServiceTypes
+                    .AsNoTracking()
+                    .Select(s => new { s.Id, s.Name })
+                    .ToList();
 
-                // Call Gemini
-                try
-                {
-                    var ai = await _geminiAdvisor.GetAdviceAsync(serviceRequest.ProblemDescription);
-                    if (ai != null)
-                    {
-                        serviceRequest.AiSuggestedServiceType = ai.ServiceType;
-                        serviceRequest.AiPossibleReasonsJson = JsonSerializer.Serialize(ai.PossibleReasons);
-                        serviceRequest.AiUrgency = ai.Urgency;
-                        serviceRequest.AiRecommendTowing = ai.RecommendTowing;
-                        serviceRequest.AiCalculatedAt = DateTime.UtcNow;
-                    }
-                }
-                catch (Exception ex)
-                {
-
-                }
-
-                _context.Add(serviceRequest);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Details), new { id = serviceRequest.Id });
+                return View(vm);
             }
 
-            // Repopulate dropdown if validation fails
-            ViewData["ServiceTypeId"] = new SelectList(_context.ServiceTypes, "Id", "Name", serviceRequest.ServiceTypeId);
-            return View(serviceRequest);
+            // Map ViewModel → Entity
+            var serviceRequest = new ServiceRequest
+            {
+                ServiceTypeId = vm.ServiceTypeId,
+                ProblemDescription = vm.ProblemDescription,
+                LocationAddress = vm.LocationAddress,
+                LocationLatitude = vm.LocationLatitude,
+                LocationLongitude = vm.LocationLongitude,
+
+                // Set system-controlled fields
+                ClientId = _userManager.GetUserId(User),
+                Status = ServiceStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // AI logic (unchanged)
+            try
+            {
+                var ai = await _geminiAdvisor.GetAdviceAsync(serviceRequest.ProblemDescription);
+                if (ai != null)
+                {
+                    serviceRequest.AiSuggestedServiceType = ai.ServiceType;
+                    serviceRequest.AiPossibleReasonsJson = JsonSerializer.Serialize(ai.PossibleReasons);
+                    serviceRequest.AiUrgency = ai.Urgency;
+                    serviceRequest.AiRecommendTowing = ai.RecommendTowing;
+                    serviceRequest.AiCalculatedAt = DateTime.UtcNow;
+                }
+            }
+            catch (Exception)
+            {
+                // optional: log later
+            }
+
+            _context.Add(serviceRequest);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = serviceRequest.Id });
+
         }
         // GET: ServiceRequests/Edit/5
         public async Task<IActionResult> Edit(int? id)
