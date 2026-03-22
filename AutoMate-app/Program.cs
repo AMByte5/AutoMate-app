@@ -1,10 +1,10 @@
 using AutoMate_app.Data;
-using AutoMate_app.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using AutoMate_app.Filters;
 using AutoMate_app.Models.Options;
-
+using AutoMate_app.Services;
+using AutoMate_app.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +18,6 @@ builder.Services.AddOptions<GeminiOptions>()
     .Validate(o => !string.IsNullOrWhiteSpace(o.ApiKey), "Gemini:ApiKey is missing")
     .Validate(o => !string.IsNullOrWhiteSpace(o.Model), "Gemini:Model is missing")
     .ValidateOnStart();
-
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -37,11 +36,17 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 });
+
+// 4. Register our custom service (Interface + Implementation)
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<RequireMechanicProfileFilter>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<RequireMechanicProfileFilter>();
 });
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+
 builder.Services.AddHttpClient<GeminiAdvisorService>();
 builder.Services.AddHttpClient<ChatService>();
 var app = builder.Build();
@@ -60,11 +65,9 @@ else
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

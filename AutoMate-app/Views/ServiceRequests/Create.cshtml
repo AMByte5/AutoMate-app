@@ -874,7 +874,10 @@
     }
 
     <script>
-        const googleMapsApiKey = '@googleMapsKey';
+        // Best Practice: No more Google API Key here!
+        // We only need the endpoint to our own backend.
+        const apiEndpoint = '/api/location/reverse-geocode';
+
         const locationAddressInput = document.getElementById('locationAddress');
         const locationLatInput = document.getElementById('locationLatitude');
         const locationLonInput = document.getElementById('locationLongitude');
@@ -887,77 +890,84 @@
                 return;
             }
 
+            // UI State Management
             locationBtn.disabled = true;
-            locationBtn.textContent = '📍 Getting location...';
+            locationBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Getting location...';
             locationStatus.className = 'location-status loading';
-            locationStatus.textContent = 'Fetching location...';
+            locationStatus.textContent = 'Fetching coordinates from browser...';
             locationAddressInput.value = '';
-            locationAddressInput.disabled = true;
 
             navigator.geolocation.getCurrentPosition(
                 async function (position) {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
+                    const { latitude, longitude } = position.coords;
 
+                    // Update hidden inputs for the form submission
                     locationLatInput.value = latitude;
                     locationLonInput.value = longitude;
 
-                    locationStatus.className = 'location-status loading';
-                    locationStatus.textContent = `📍 Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (Accuracy: ${Math.round(accuracy)}m) - Getting address...`;
-
-                    const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}`;
+                    locationStatus.textContent = `📍 Coordinates found. Fetching address from AutoMate API...`;
 
                     try {
-                        const response = await fetch(geocodingUrl);
+                        // Calling your new Backend Controller
+                        const response = await fetch(apiEndpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // If you have Antiforgery enabled, add the token here
+                            },
+                            body: JSON.stringify({
+                                lat: latitude,
+                                lng: longitude
+                            })
+                        });
+
+                        if (!response.ok) throw new Error('Backend API Error');
+
                         const data = await response.json();
 
-                        if (data.status === 'OK' && data.results.length > 0) {
-                            const address = data.results[0].formatted_address;
-                            locationAddressInput.value = address;
+                        // Match the DTO property name (formattedAddress)
+                        if (data.formattedAddress) {
+                            locationAddressInput.value = data.formattedAddress;
                             locationStatus.className = 'location-status success';
-                            locationStatus.textContent = `✅ Location found: ${address}`;
+                            locationStatus.textContent = `✅ ${data.formattedAddress}`;
                         } else {
-                            locationAddressInput.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                            locationStatus.className = 'location-status error';
-                            locationStatus.textContent = `⚠️ Unable to retrieve address. Using coordinates.`;
+                            throw new Error('Address not found');
                         }
+
                     } catch (error) {
+                        console.error('Service Error:', error);
                         locationAddressInput.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
                         locationStatus.className = 'location-status error';
-                        locationStatus.textContent = `⚠️ Geocoding failed. Using coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                        locationStatus.textContent = `⚠️ Address unavailable. Using raw coordinates.`;
                     } finally {
-                        locationAddressInput.disabled = false;
                         locationBtn.disabled = false;
                         locationBtn.textContent = '📍 Use My Location';
                     }
                 },
                 function (error) {
                     let errorMessage = 'Unable to get your location.';
-
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
-                            errorMessage = 'Location access denied. Please enable location permissions.';
+                            errorMessage = 'Location access denied by user.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location information unavailable.';
+                            errorMessage = 'GPS signal lost.';
                             break;
                         case error.TIMEOUT:
                             errorMessage = 'Location request timed out.';
                             break;
                     }
-
                     showLocationError(errorMessage);
                     locationBtn.disabled = false;
                     locationBtn.textContent = '📍 Use My Location';
-                }
+                },
+                { timeout: 10000 } // Best Practice: Set a timeout for the browser GPS
             );
         }
 
         function showLocationError(message) {
             locationStatus.className = 'location-status error';
             locationStatus.textContent = `❌ ${message}`;
-            locationAddressInput.disabled = false;
         }
     </script>
 }
