@@ -1,4 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using System.Linq
+
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -654,6 +656,178 @@
             min-width: 0;
         }
 
+        /* ===== Account dropdown (Option C) ===== */
+        .am-account {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* The only thing visible in navbar */
+        .am-account-toggle {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(2, 6, 23, 0.35);
+            padding: 6px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: transform .15s ease, border-color .15s ease, background .15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .am-account-toggle:hover {
+                border-color: rgba(56, 189, 248, 0.35);
+                background: rgba(2, 6, 23, 0.55);
+                transform: translateY(-1px);
+            }
+
+        /* Initials avatar */
+        .am-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            color: #cfe6ff;
+            background: radial-gradient(circle at top, rgba(56,189,248,.18), rgba(59,130,246,.10));
+            border: 1px solid rgba(56,189,248,.28);
+            box-shadow: 0 10px 24px rgba(0,0,0,.28);
+        }
+
+        /* Dropdown menu hidden by default */
+        .am-account-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 280px;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 22px 60px rgba(0,0,0,.55);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Show menu on hover (desktop) */
+        @@media (min-width: 992px) {
+            .am-account:hover .am-account-menu
+
+        {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        }
+
+        /* Show menu on click (we'll toggle this class via JS for all screens) */
+        .am-account.is-open .am-account-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .am-account-header {
+            display: grid;
+            gap: 4px;
+            padding: 6px 6px 10px 6px;
+        }
+
+        .am-account-name {
+            font-weight: 700;
+            color: #e5e7eb;
+        }
+
+        .am-account-email {
+            font-size: 12px;
+            color: rgba(226, 232, 240, 0.68);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        .am-account-divider {
+            height: 1px;
+            background: rgba(148, 163, 184, 0.14);
+            margin: 8px 0;
+        }
+
+        .am-account-logout {
+            width: 100%;
+            border: 1px solid rgba(239, 68, 68, 0.28);
+            background: rgba(239, 68, 68, 0.08);
+            color: #fecaca;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 650;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform .15s ease, background .15s ease, border-color .15s ease;
+        }
+
+            .am-account-logout:hover {
+                transform: translateY(-1px);
+                background: rgba(239, 68, 68, 0.12);
+                border-color: rgba(239, 68, 68, 0.40);
+            }
+
+            /* Accessibility: focus ring */
+            .am-account-toggle:focus-visible,
+            .am-account-logout:focus-visible {
+                outline: 2px solid rgba(56,189,248,.55);
+                outline-offset: 2px;
+            }
+
+        .am-mobile-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 12px;
+            color: #cfe6ff;
+            background: radial-gradient(circle at top, rgba(56,189,248,.18), rgba(59,130,246,.10));
+            border: 1px solid rgba(56,189,248,.28);
+            flex: 0 0 auto;
+        }
+
+        .am-mobile-account-text {
+            display: grid;
+            gap: 2px;
+            min-width: 0; /* important so ellipsis works */
+        }
+
+        .am-mobile-account-name {
+            font-weight: 700;
+            color: #e5e7eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .am-mobile-account-email {
+            font-size: 12px;
+            color: rgba(226, 232, 240, 0.68);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
     </style>
 </head>
 <body>
@@ -746,19 +920,64 @@
                 <div class="am-auth">
                     @if (SignInManager.IsSignedIn(User))
                     {
-                         
-                        <span class="am-user-pill" title="@User.Identity?.Name">
-                            <span>👤</span>
-                            @User.Identity?.Name
-                        </span>
+                        var email = User?.Identity?.Name ?? "";
 
-                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
-                            <button type="submit" class="am-auth-btn am-logout-btn">
-                                <span>🚪</span>
-                                Logout
+                        // Try to get friendly name from claims first
+                        var claimName =
+                        User?.FindFirst("name")?.Value ??
+                        User?.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+
+                        // 1️⃣ Take ONLY the part before "@"
+                        var usernamePart = email.Contains("@") ? email.Split('@')[0] : email;
+
+                        // 2️⃣ Choose base name (claim if exists, otherwise username part)
+                        var rawName = string.IsNullOrWhiteSpace(claimName) ? usernamePart : claimName;
+
+                        // 3️⃣ Keep ONLY alphabetic characters
+                        var lettersOnly = new string(rawName
+                        .Where(char.IsLetter)
+                        .ToArray());
+
+                        // 4️⃣ Fallback if empty
+                        var displayName = string.IsNullOrWhiteSpace(lettersOnly) ? "User" : lettersOnly;
+
+                        // 5️⃣ Capitalize nicely
+                        displayName = char.ToUpper(displayName[0]) + displayName.Substring(1).ToLower();
+
+                        // 6️⃣ Initials for avatar
+                        var initials = string.Join("",
+                        displayName
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                        .Take(2)
+                        .Select(s => char.ToUpperInvariant(s[0]))
+                        );
+
+                        if (string.IsNullOrWhiteSpace(initials))
+                            initials = "U";
+
+                        <div class="am-account">
+                            <button class="am-account-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+                                <span class="am-avatar" aria-hidden="true">@initials</span>
                             </button>
-                        </form>
+
+                            <div class="am-account-menu" role="menu">
+                                <div class="am-account-header">
+                                    <div class="am-account-name">Signed in as <br> @displayName</div>
+                                    <div class="am-account-email" title="@email">@email</div>
+                                </div>
+
+                                <div class="am-account-divider"></div>
+
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+                                    <button type="submit" class="am-account-logout">
+                                        <span aria-hidden="true">🚪</span>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     }
+
                     else
                     {
                         <a asp-area="Identity" asp-page="/Account/Login" class="am-auth-btn">
@@ -850,28 +1069,68 @@
 
             <div class="am-mobile-divider"></div>
 
-            @if (SignInManager.IsSignedIn(User))
-            {
-                <div class="am-mobile-section-title">Account</div>
+           @if (SignInManager.IsSignedIn(User))
 
-                <li>
-                    <div class="am-mobile-nav-link" style="cursor: default;">
-                        <span>👤</span>
-                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            @User.Identity?.Name
-                        </span>
-                    </div>
-                </li>
+    {
+                var email = User?.Identity?.Name ?? "";
 
-                <li>
-                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
-                        <button type="submit" class="am-mobile-nav-link" style="width:100%; text-align:left;">
-                            <span>🚪</span>
-                            Logout
-                        </button>
-                    </form>
-                </li>
-            }
+                // Try to get friendly name from claims first
+                var claimName =
+                User?.FindFirst("name")?.Value ??
+                User?.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+
+                // 1️⃣ Take ONLY the part before "@"
+                var usernamePart = email.Contains("@") ? email.Split('@')[0] : email;
+
+                // 2️⃣ Choose base name (claim if exists, otherwise username part)
+                var rawName = string.IsNullOrWhiteSpace(claimName) ? usernamePart : claimName;
+
+                // 3️⃣ Keep ONLY alphabetic characters
+                var lettersOnly = new string(rawName
+                .Where(char.IsLetter)
+                .ToArray());
+
+                // 4️⃣ Fallback if empty
+                var displayName = string.IsNullOrWhiteSpace(lettersOnly) ? "User" : lettersOnly;
+
+                // 5️⃣ Capitalize nicely
+                displayName = char.ToUpper(displayName[0]) + displayName.Substring(1).ToLower();
+
+                // 6️⃣ Initials for avatar
+                var initials = string.Join("",
+                displayName
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Select(s => char.ToUpperInvariant(s[0]))
+                );
+
+                if (string.IsNullOrWhiteSpace(initials))
+                    initials = "U";
+    
+
+    <div class="am-mobile-section-title">Account</div>
+
+    <li>
+        <div class="am-mobile-nav-link" style="cursor: default;">
+            <span class="am-mobile-avatar">@initials</span>
+
+            <div class="am-mobile-account-text">
+                <div class="am-mobile-account-name">Signed in as @displayName</div>
+                <div class="am-mobile-account-email">@email</div>
+            </div>
+        </div>
+    </li>
+
+    <li>
+        <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+            <button type="submit" class="am-mobile-nav-link" style="width:100%; text-align:left;">
+                <span>🚪</span>
+                Logout
+            </button>
+        </form>
+    </li>
+}
+
             else
             {
                 <div class="am-mobile-section-title">Account</div>
